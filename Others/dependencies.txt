@@ -1,0 +1,9 @@
+# Create python Venv
+mkdir ~/Desktop/venv
+python3 -m venv ~/Desktop/venv --system-site-packages
+
+# Install OpenCv
+pip3 install opencv-python==4.6.0.66
+
+# Install pillow (Needed for Tk)
+pip3 install pillow --upgrade
