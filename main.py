@@ -4,21 +4,11 @@ import numpy as np
 
 from tkinter import *
 from PIL import Image, ImageTk
-
-from PIL import Image, ImageTk
 from datetime import datetime
 from picamera2 import Picamera2, Preview
 from libcamera import Transform
-
-# Camera Settings
-piCam = Picamera2()
-piCam.preview_configuration.main.size=(385, 200)
-piCam.preview_configuration.main.format="RGB888"
-piCam.preview_configuration.transform=Transform(vflip=1, hflip=1)
-piCam.preview_configuration.controls.FrameRate=30
-piCam.preview_configuration.align()
-piCam.configure("preview")
-piCam.start()
+from picamera2.encoders import H264Encoder
+from picamera2.outputs import FfmpegOutput
 
 
 class WebcampApp:
@@ -26,9 +16,7 @@ class WebcampApp:
         self.window = window
         self.window.title("Webcam App")
         self.default_color = window.cget("bg")
-        
-#         current_image = Image.open('/home/dan/Downloads/surf.jpeg').resize((385, 200))
-#         self.photo = ImageTk.PhotoImage(image=current_image)
+        self.configure_camera()
 
         self.color_image_label = Label(self.window)
         self.mask_image_label = Label(self.window)
@@ -65,7 +53,7 @@ class WebcampApp:
 
         
     def refresh_images(self):
-        current_image = Image.fromarray(cv2.cvtColor(piCam.capture_array(), cv2.COLOR_BGR2RGB))
+        current_image = Image.fromarray(cv2.cvtColor(self.piCam.capture_array(), cv2.COLOR_BGR2RGB))
         self.photo = ImageTk.PhotoImage(image=current_image)
         
         self.check_buttons_pressed()
@@ -85,11 +73,19 @@ class WebcampApp:
             self.mask_image_label.place_forget()
 
     def rec_command(self):
+        time_now = str(datetime.now().strftime("%Y_%m_%d_%H_%M_%S")).replace(" ", "")
+        video_name_and_format =  time_now + '.mp4'
+
+        # Button pressed
         if self.rec_button_state is False:
+            self.encoder.output = FfmpegOutput(video_name_and_format)
+            self.piCam.start_encoder(self.encoder)
             self.rec_button_state = True
             self.rec_button.configure(relief='sunken', fg='white', bg='red')
             self.hide_wiggets()
+        # Button de-pressed
         else:
+            self.piCam.stop_encoder()
             self.rec_button_state = False
             self.rec_button.configure(relief='raised', fg='red', bg=self.default_color)
             self.show_wiggets()
@@ -110,6 +106,17 @@ class WebcampApp:
         self.scale_five.configure(state='normal', fg='black')
         self.scale_six.configure(state='normal', fg='black')
         
+    def configure_camera(self):
+        self.piCam = Picamera2()
+        self.piCam.preview_configuration.main.size=(385, 200)
+        self.piCam.preview_configuration.main.format="RGB888"
+        self.piCam.preview_configuration.transform=Transform(vflip=1, hflip=1)
+        self.piCam.preview_configuration.controls.FrameRate=30
+        self.piCam.preview_configuration.align()
+        self.piCam.configure("preview")
+        self.encoder = H264Encoder(1000000)
+        self.piCam.start()
+                
 # Size of the Window = 800x410
 if __name__== '__main__':
     root = tk.Tk()
@@ -118,5 +125,5 @@ if __name__== '__main__':
     root.after(200, lambda: root.attributes('-zoomed', True))
     app = WebcampApp(root)
     root.mainloop()
-    
+
 
