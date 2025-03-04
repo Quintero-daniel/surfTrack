@@ -82,15 +82,15 @@ class WebcampApp:
             self.piCam.start_encoder(self.encoder)
             self.rec_button_state = True
             self.rec_button.configure(relief='sunken', fg='white', bg='red')
-            self.hide_wiggets()
+            self.hide_widgets()
         # Button de-pressed
         else:
             self.piCam.stop_encoder()
             self.rec_button_state = False
             self.rec_button.configure(relief='raised', fg='red', bg=self.default_color)
-            self.show_wiggets()
+            self.show_widgets()
         
-    def hide_wiggets(self):
+    def hide_widgets(self):
         self.scale_one.configure(state='disabled', fg='white')
         self.scale_two.configure(state='disabled', fg='white')
         self.scale_three.configure(state='disabled', fg='white')
@@ -98,7 +98,7 @@ class WebcampApp:
         self.scale_five.configure(state='disabled', fg='white')
         self.scale_six.configure(state='disabled', fg='white')
         
-    def show_wiggets(self):
+    def show_widgets(self):
         self.scale_one.configure(state='normal', fg='black')
         self.scale_two.configure(state='normal', fg='black')
         self.scale_three.configure(state='normal', fg='black')
