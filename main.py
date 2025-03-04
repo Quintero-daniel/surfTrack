@@ -1,6 +1,7 @@
 import tkinter as tk
 import cv2
 import numpy as np
+import Fps
 
 from tkinter import *
 from PIL import Image, ImageTk
@@ -17,6 +18,7 @@ class WebcampApp:
         self.window.title("Webcam App")
         self.default_color = window.cget("bg")
         self.configure_camera()
+        self.fps = Fps()
 
         self.color_image_label = Label(self.window)
         self.mask_image_label = Label(self.window)
