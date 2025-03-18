@@ -15,10 +15,11 @@ from picamera2.outputs import FfmpegOutput
 
 class WebcampApp:
     def __init__(self, window):
+        display_w, display_h = 385, 200
         self.window = window
         self.window.title("Webcam App")
         self.default_color = window.cget("bg")
-        self.configure_camera()
+        self.configure_camera(display_w, display_h)
         self.fps = Fps()
 
         self.color_image_label = Label(self.window)
@@ -30,23 +31,28 @@ class WebcampApp:
         self.mask_image_checkbutton_var = IntVar()
         Checkbutton(window, variable=self.mask_image_checkbutton_var, onvalue=1, offvalue=0).place(x=600, y=220)
 
-        # state=tk.DISABLED
-        self.scale_one = Scale(window, width=10, borderwidth=0, length=385, from_=0, to=255, tickinterval=0, orient=HORIZONTAL)
+        self.scale_one_var = IntVar()
+        self.scale_one = Scale(window, variable=self.scale_one_var, width=10, borderwidth=0, length=385, from_=0, to=255, tickinterval=0, orient=HORIZONTAL)
         self.scale_one.place(x=10, y=225)
-        
-        self.scale_two = Scale(window, width=10, borderwidth=0, length=385, from_=0, to=255, tickinterval=0, orient=HORIZONTAL)
+
+        self.scale_two_var = IntVar()
+        self.scale_two = Scale(window, variable=self.scale_two_var, width=10, borderwidth=0, length=385, from_=0, to=255, tickinterval=0, orient=HORIZONTAL)
         self.scale_two.place(x=10, y=260)
-        
-        self.scale_three = Scale(window, width=10, borderwidth=0, length=385, from_=0, to=255, tickinterval=0, orient=HORIZONTAL)
+
+        self.scale_three_var = IntVar()
+        self.scale_three = Scale(window, variable=self.scale_three_var, width=10, borderwidth=0, length=385, from_=0, to=255, tickinterval=0, orient=HORIZONTAL)
         self.scale_three.place(x=10, y=295)
-        
-        self.scale_four = Scale(window, width=10, borderwidth=0, length=385, from_=0, to=255, tickinterval=0, orient=HORIZONTAL)
+
+        self.scale_four_var = IntVar()
+        self.scale_four = Scale(window, variable=self.scale_four_var, width=10, borderwidth=0, length=385, from_=0, to=255, tickinterval=0, orient=HORIZONTAL)
         self.scale_four.place(x=405, y=225)
-        
-        self.scale_five = Scale(window, width=10, borderwidth=0, length=385, from_=0, to=255, tickinterval=0, orient=HORIZONTAL)
+
+        self.scale_five_var = IntVar()
+        self.scale_five = Scale(window, variable=self.scale_five_var, width=10, borderwidth=0, length=385, from_=0, to=255, tickinterval=0, orient=HORIZONTAL)
         self.scale_five.place(x=405, y=260)
-        
-        self.scale_six = Scale(window, width=10, borderwidth=0, length=385, from_=0, to=255, tickinterval=0, orient=HORIZONTAL)
+
+        self.scale_six_var = IntVar()
+        self.scale_six = Scale(window, variable=self.scale_six_var, width=10, borderwidth=0, length=385, from_=0, to=255, tickinterval=0, orient=HORIZONTAL)
         self.scale_six.place(x=405, y=295)
         
         self.rec_button_state = False
@@ -57,6 +63,24 @@ class WebcampApp:
     def refresh_images(self):
         time_start = time.time()
         frame = self.piCam.capture_array()
+        # --
+        lowerBound = np.array([self.scale_one_var, self.scale_two_var, self.scale_three_var])
+        upperBound = np.array([self.scale_four_var, self.scale_five_var, self.scale_six_var])
+
+        frameHSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        myMask = cv2.inRange(frameHSV, lowerBound, upperBound)
+        objectOfInterest = cv2.bitwise_and(frame, frame, mask=myMask)
+        contours, junk = cv2.findContours(myMask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        if len(contours) > 0:
+            contours =  sorted(contours, key=lambda x:cv2.contourArea(x), reverse=True)
+            #cv2.drawContours(frame, contours,  0, (255, 0, 0), 3)
+            contour = contours[0]
+            x,y,w,h = cv2.boundingRect(contour)
+            cv2.rectangle(frame, (x,y), (x+w, y+h), (0,0,255), 3)
+
+
+        # --
         cv2.putText(frame, str(int(self.fps.fps_counter)) + " fps", self.fps.fps_text_position, self.fps.fps_text_font, self.fps.fps_text_height, self.fps.fps_text_color, self.fps.fps_text_weight)
 
         current_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
@@ -115,9 +139,9 @@ class WebcampApp:
         self.scale_five.configure(state='normal', fg='black')
         self.scale_six.configure(state='normal', fg='black')
         
-    def configure_camera(self):
+    def configure_camera(self, display_w, display_h):
         self.piCam = Picamera2()
-        self.piCam.preview_configuration.main.size=(385, 200)
+        self.piCam.preview_configuration.main.size=(display_w, display_h)
         self.piCam.preview_configuration.main.format="RGB888"
         self.piCam.preview_configuration.transform=Transform(vflip=1, hflip=1)
         self.piCam.preview_configuration.controls.FrameRate=30
