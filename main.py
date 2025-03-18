@@ -2,6 +2,7 @@ import tkinter as tk
 import cv2
 import numpy as np
 import time
+import pantilthat
 
 from fps import Fps
 from tkinter import *
@@ -21,6 +22,11 @@ class WebcampApp:
         self.default_color = window.cget("bg")
         self.configure_camera(display_w, display_h)
         self.fps = Fps()
+
+        panAngle = 0
+        tiltAngle = 0
+        pantilthat.pan(panAngle)
+        pantilthat.tilt(tiltAngle)
 
         self.color_image_label = Label(self.window)
         self.mask_image_label = Label(self.window)
@@ -63,7 +69,21 @@ class WebcampApp:
     def refresh_images(self):
         time_start = time.time()
         frame = self.piCam.capture_array()
-        # --
+
+        frame, mask = self.calculate_frames(frame)
+
+        current_color_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        current_mask_image = Image.fromarray(cv2.cvtColor(mask, cv2.COLOR_BGR2RGB))
+        self.color_photo = ImageTk.PhotoImage(image=current_color_image)
+        self.mask_photo = ImageTk.PhotoImage(image=current_mask_image)
+
+        self.check_buttons_pressed()
+        time_end = time.time()
+        loop_time = time_end - time_start
+        self.fps.fps_counter = .9 * self.fps.fps_counter + .1 * (1 / loop_time)
+        self.window.after(15, self.refresh_images)
+
+    def calculate_frames(self, frame):
         lowerBound = np.array([self.scale_one_var.get(), self.scale_two_var.get(), self.scale_three_var.get()])
         upperBound = np.array([self.scale_four_var.get(), self.scale_five_var.get(), self.scale_six_var.get()])
 
@@ -73,26 +93,15 @@ class WebcampApp:
         contours, junk = cv2.findContours(myMask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         if len(contours) > 0:
-            contours =  sorted(contours, key=lambda x:cv2.contourArea(x), reverse=True)
-            #cv2.drawContours(frame, contours,  0, (255, 0, 0), 3)
+            contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
+            # cv2.drawContours(frame, contours,  0, (255, 0, 0), 3)
             contour = contours[0]
-            x,y,w,h = cv2.boundingRect(contour)
-            cv2.rectangle(frame, (x,y), (x+w, y+h), (0,0,255), 3)
+            x, y, w, h = cv2.boundingRect(contour)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
 
-
-        # --
-        cv2.putText(frame, str(int(self.fps.fps_counter)) + " fps", self.fps.fps_text_position, self.fps.fps_text_font, self.fps.fps_text_height, self.fps.fps_text_color, self.fps.fps_text_weight)
-
-        current_color_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        current_mask_image = Image.fromarray(cv2.cvtColor(myMask, cv2.COLOR_BGR2RGB))
-        self.color_photo = ImageTk.PhotoImage(image=current_color_image)
-        self.mask_photo = ImageTk.PhotoImage(image=current_mask_image)
-
-        self.check_buttons_pressed()
-        time_end = time.time()
-        loop_time = time_end - time_start
-        self.fps.fps_counter = .9 * self.fps.fps_counter + .1 * (1 / loop_time)
-        self.window.after(15, self.refresh_images)
+        cv2.putText(frame, str(int(self.fps.fps_counter)) + " fps", self.fps.fps_text_position, self.fps.fps_text_font,
+                    self.fps.fps_text_height, self.fps.fps_text_color, self.fps.fps_text_weight)
+        return frame, myMask
 
     def check_buttons_pressed(self):
         if not self.color_image_checkbutton_var.get():
