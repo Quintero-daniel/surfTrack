@@ -1,6 +1,7 @@
 import tkinter as tk
 import cv2
 import numpy as np
+import time
 
 from fps import Fps
 from tkinter import *
@@ -55,10 +56,15 @@ class WebcampApp:
 
         
     def refresh_images(self):
+        time_start = time.time()
         current_image = Image.fromarray(cv2.cvtColor(self.piCam.capture_array(), cv2.COLOR_BGR2RGB))
         self.photo = ImageTk.PhotoImage(image=current_image)
         
         self.check_buttons_pressed()
+        time_end = time.time()
+        loop_time = time_end - time_start
+        self.fps.fps_counter = .9*self.fps.fps_counter + .1*(1/loop_time)
+        print(self.fps.fps_counter)
         self.window.after(15, self.refresh_images)
         
     def check_buttons_pressed(self):
