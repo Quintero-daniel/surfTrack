@@ -83,8 +83,10 @@ class WebcampApp:
         # --
         cv2.putText(frame, str(int(self.fps.fps_counter)) + " fps", self.fps.fps_text_position, self.fps.fps_text_font, self.fps.fps_text_height, self.fps.fps_text_color, self.fps.fps_text_weight)
 
-        current_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        self.photo = ImageTk.PhotoImage(image=current_image)
+        current_color_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        current_mask_image = Image.fromarray(cv2.cvtColor(myMask, cv2.COLOR_BGR2RGB))
+        self.color_photo = ImageTk.PhotoImage(image=current_color_image)
+        self.mask_photo = ImageTk.PhotoImage(image=current_mask_image)
 
         self.check_buttons_pressed()
         time_end = time.time()
@@ -94,13 +96,13 @@ class WebcampApp:
 
     def check_buttons_pressed(self):
         if not self.color_image_checkbutton_var.get():
-            self.color_image_label.configure(image=self.photo)
+            self.color_image_label.configure(image=self.color_photo)
             self.color_image_label.place(x=10, y=10)
         else:
             self.color_image_label.place_forget()
 
         if not self.mask_image_checkbutton_var.get():
-            self.mask_image_label.configure(image=self.photo)
+            self.mask_image_label.configure(image=self.mask_photo)
             self.mask_image_label.place(x=405, y=10)
         else:
             self.mask_image_label.place_forget()
