@@ -64,8 +64,8 @@ class WebcampApp:
         time_start = time.time()
         frame = self.piCam.capture_array()
         # --
-        lowerBound = np.array([self.scale_one_var, self.scale_two_var, self.scale_three_var])
-        upperBound = np.array([self.scale_four_var, self.scale_five_var, self.scale_six_var])
+        lowerBound = np.array([self.scale_one_var.get(), self.scale_two_var.get(), self.scale_three_var.get()])
+        upperBound = np.array([self.scale_four_var.get(), self.scale_five_var.get(), self.scale_six_var.get()])
 
         frameHSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         myMask = cv2.inRange(frameHSV, lowerBound, upperBound)
