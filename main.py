@@ -25,10 +25,10 @@ class WebcampApp:
 
         self.panError = 0
         self.tiltError = 0
-        panAngle = 0
-        tiltAngle = 0
-        pantilthat.pan(panAngle)
-        pantilthat.tilt(tiltAngle)
+        self.panAngle = 0
+        self.tiltAngle = 0
+        pantilthat.pan(self.panAngle)
+        pantilthat.tilt(self.tiltAngle)
 
         self.color_image_label = Label(self.window)
         self.mask_image_label = Label(self.window)
@@ -102,32 +102,32 @@ class WebcampApp:
             x, y, w, h = cv2.boundingRect(contour)
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
 
+            panCalc = (x+w/2)-self.display_w/2
+            if panCalc > self.panError + 5 or panCalc < self.panError - 5:
+                self.panError = panCalc
+                self.panAngle = self.panAngle - self.panError/75
+
+                if self.panAngle <-90:
+                    self.panAngle=-90
+                if self.panAngle >90:
+                    self.panAngle=90
+                if abs(self.panError) > 35:
+                    pantilthat.pan(self.panAngle)
+
+            tiltCalc = (y+h/2)-self.display_h/2
+            if tiltCalc > self.tiltError + 5 or tiltCalc < self.tiltError - 5:
+                self.tiltError = tiltCalc
+                self.tiltAngle = self.tiltAngle + self.tiltError/75
+
+                if self.tiltAngle <-90:
+                    self.tiltAngle=-90
+                if self.tiltAngle >40:
+                    self.tiltAngle=40
+                if abs(self.tiltError) > 35:
+                    pantilthat.tilt(self.tiltAngle)
+
         cv2.putText(frame, str(int(self.fps.fps_counter)) + " fps", self.fps.fps_text_position, self.fps.fps_text_font,
                     self.fps.fps_text_height, self.fps.fps_text_color, self.fps.fps_text_weight)
-
-        panCalc = (x+w/2)-self.display_w/2
-        if panCalc > self.panError + 5 or panCalc < self.panError - 5:
-            self.panError = panCalc
-            self.panAngle = self.panAngle - self.panError/75
-
-            if self.panAngle <-90:
-                self.panAngle=-90
-            if self.panAngle >90:
-                self.panAngle=90
-            if abs(self.panError) > 35:
-                pantilthat.pan(self.panAngle)
-
-        tiltCalc = (y+h/2)-self.display_h/2
-        if tiltCalc > self.tiltError + 5 or tiltCalc < self.tiltError - 5:
-            self.tiltError = tiltCalc
-            self.tiltAngle = self.tiltAngle + self.tiltError/75
-
-            if self.tiltAngle <-90:
-                self.tiltAngle=-90
-            if self.tiltAngle >40:
-                self.tiltAngle=40
-            if abs(self.tiltError) > 35:
-                pantilthat.tilt(self.tiltAngle)
 
         return frame, myMask
 
