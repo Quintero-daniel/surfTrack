@@ -1,8 +1,8 @@
 import tkinter as tk
 import cv2
 import numpy as np
-import Fps
 
+from fps import Fps
 from tkinter import *
 from PIL import Image, ImageTk
 from datetime import datetime
