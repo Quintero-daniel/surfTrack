@@ -16,13 +16,15 @@ from picamera2.outputs import FfmpegOutput
 
 class WebcampApp:
     def __init__(self, window):
-        display_w, display_h = 385, 200
+        self.display_w, self.display_h = 385, 200
         self.window = window
         self.window.title("Webcam App")
         self.default_color = window.cget("bg")
-        self.configure_camera(display_w, display_h)
+        self.configure_camera(self.display_w, self.display_h)
         self.fps = Fps()
 
+        self.panError = 0
+        self.tiltError = 0
         panAngle = 0
         tiltAngle = 0
         pantilthat.pan(panAngle)
@@ -72,6 +74,7 @@ class WebcampApp:
 
         frame, mask = self.calculate_frames(frame)
 
+
         current_color_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         current_mask_image = Image.fromarray(cv2.cvtColor(mask, cv2.COLOR_BGR2RGB))
         self.color_photo = ImageTk.PhotoImage(image=current_color_image)
@@ -101,6 +104,31 @@ class WebcampApp:
 
         cv2.putText(frame, str(int(self.fps.fps_counter)) + " fps", self.fps.fps_text_position, self.fps.fps_text_font,
                     self.fps.fps_text_height, self.fps.fps_text_color, self.fps.fps_text_weight)
+
+        panCalc = (x+w/2)-self.display_w/2
+        if panCalc > self.panError + 5 or panCalc < self.panError - 5:
+            self.panError = panCalc
+            self.panAngle = self.panAngle - self.panError/75
+
+            if self.panAngle <-90:
+                self.panAngle=-90
+            if self.panAngle >90:
+                self.panAngle=90
+            if abs(self.panError) > 35:
+                pantilthat.pan(self.panAngle)
+
+        tiltCalc = (y+h/2)-self.display_h/2
+        if tiltCalc > self.tiltError + 5 or tiltCalc < self.tiltError - 5:
+            self.tiltError = tiltCalc
+            self.tiltAngle = self.tiltAngle + self.tiltError/75
+
+            if self.tiltAngle <-90:
+                self.tiltAngle=-90
+            if self.tiltAngle >40:
+                self.tiltAngle=40
+            if abs(self.tiltError) > 35:
+                pantilthat.tilt(self.tiltAngle)
+
         return frame, myMask
 
     def check_buttons_pressed(self):
