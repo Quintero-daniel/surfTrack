@@ -65,15 +65,16 @@ class WebcampApp:
         
         self.rec_button_state = False
         self.rec_button = Button(text ="REC", fg='red', bg=self.default_color, command=self.rec_command)
-        self.rec_button.place(x=740, y=380)       
+        self.rec_button.place(x=740, y=380)
+        self.track_button_state = False
+        self.track_button = Button(text ="Track", fg='red', bg=self.default_color, command=self.track_command)
+        self.track_button.place(x=680, y=380) 
         self.refresh_images()
 
     def refresh_images(self):
         time_start = time.time()
         frame = self.piCam.capture_array()
-
         frame, mask = self.calculate_frames(frame)
-
 
         current_color_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         current_mask_image = Image.fromarray(cv2.cvtColor(mask, cv2.COLOR_BGR2RGB))
@@ -94,38 +95,39 @@ class WebcampApp:
         myMask = cv2.inRange(frameHSV, lowerBound, upperBound)
         objectOfInterest = cv2.bitwise_and(frame, frame, mask=myMask)
         contours, junk = cv2.findContours(myMask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        if self.track_button_state:
+            if len(contours) > 0:
+                contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
+                # cv2.drawContours(frame, contours,  0, (255, 0, 0), 3)
+                contour = contours[0]
+                x, y, w, h = cv2.boundingRect(contour)
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
 
-        if len(contours) > 0:
-            contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
-            # cv2.drawContours(frame, contours,  0, (255, 0, 0), 3)
-            contour = contours[0]
-            x, y, w, h = cv2.boundingRect(contour)
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
+                panCalc = (x+w/2)-self.display_w/2
+                if panCalc > self.panError + 5 or panCalc < self.panError - 5:
+                    self.panError = panCalc
+                    self.panAngle = self.panAngle - self.panError/75
 
-            panCalc = (x+w/2)-self.display_w/2
-            if panCalc > self.panError + 5 or panCalc < self.panError - 5:
-                self.panError = panCalc
-                self.panAngle = self.panAngle - self.panError/75
+                    if self.panAngle <-90:
+                        self.panAngle=-90
+                    if self.panAngle >90:
+                        self.panAngle=90
+                    if abs(self.panError) > 35:
+                        pantilthat.pan(self.panAngle)
 
-                if self.panAngle <-90:
-                    self.panAngle=-90
-                if self.panAngle >90:
-                    self.panAngle=90
-                if abs(self.panError) > 35:
-                    pantilthat.pan(self.panAngle)
+                tiltCalc = (y+h/2)-self.display_h/2
+                if tiltCalc > self.tiltError + 5 or tiltCalc < self.tiltError - 5:
+                    self.tiltError = tiltCalc
+                    self.tiltAngle = self.tiltAngle + self.tiltError/75
 
-            tiltCalc = (y+h/2)-self.display_h/2
-            if tiltCalc > self.tiltError + 5 or tiltCalc < self.tiltError - 5:
-                self.tiltError = tiltCalc
-                self.tiltAngle = self.tiltAngle + self.tiltError/75
-
-                if self.tiltAngle <-90:
-                    self.tiltAngle=-90
-                if self.tiltAngle >40:
-                    self.tiltAngle=40
-                if abs(self.tiltError) > 35:
-                    pantilthat.tilt(self.tiltAngle)
-
+                    if self.tiltAngle <-90:
+                        self.tiltAngle=-90
+                    if self.tiltAngle >40:
+                        self.tiltAngle=40
+                    if abs(self.tiltError) > 35:
+                        pantilthat.tilt(self.tiltAngle)
+            
         cv2.putText(frame, str(int(self.fps.fps_counter)) + " fps", self.fps.fps_text_position, self.fps.fps_text_font,
                     self.fps.fps_text_height, self.fps.fps_text_color, self.fps.fps_text_weight)
 
@@ -161,6 +163,16 @@ class WebcampApp:
             self.rec_button_state = False
             self.rec_button.configure(relief='raised', fg='red', bg=self.default_color)
             self.show_widgets()
+            
+    def track_command(self):
+        # Button pressed
+        if self.track_button_state is False:
+            self.track_button_state = True
+            self.track_button.configure(relief='sunken')
+        # Button de-pressed
+        else:
+            self.track_button_state = False
+            self.track_button.configure(relief='raised')
         
     def hide_widgets(self):
         self.scale_one.configure(state='disabled', fg='white')
