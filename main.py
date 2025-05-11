@@ -17,7 +17,7 @@ DISPLAY_W = 385
 DISPLAY_H = 200
 
 
-class WebcampApp:
+class WebcamApp:
     def __init__(self, window):
         self.window = window
         self.window.title("Webcam App")
@@ -25,12 +25,12 @@ class WebcampApp:
         self.configure_camera(DISPLAY_W, DISPLAY_H)
         self.fps = Fps()
 
-        self.panError = 0
-        self.tiltError = 0
-        self.panAngle = 0
-        self.tiltAngle = 0
-        pantilthat.pan(self.panAngle)
-        pantilthat.tilt(self.tiltAngle)
+        self.pan_error = 0
+        self.tilt_error = 0
+        self.pan_angle = 0
+        self.tilt_angle = 0
+        pantilthat.pan(self.pan_angle)
+        pantilthat.tilt(self.tilt_angle)
 
         self.color_image_label = Label(self.window)
         self.mask_image_label = Label(self.window)
@@ -77,7 +77,7 @@ class WebcampApp:
 
     def refresh_images(self):
         time_start = time.time()
-        frame = self.piCam.capture_array()
+        frame = self.pi_cam.capture_array()
         frame, mask = self.calculate_frames(frame)
 
         current_color_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
@@ -91,15 +91,13 @@ class WebcampApp:
         self.window.after(15, self.refresh_images)
 
     def calculate_frames(self, frame):
-        lowerBound = np.array([self.scale_one_var.get(), self.scale_two_var.get(), self.scale_three_var.get()])
-        upperBound = np.array([self.scale_four_var.get(), self.scale_five_var.get(), self.scale_six_var.get()])
+        lower_bound = np.array([self.scale_one_var.get(), self.scale_two_var.get(), self.scale_three_var.get()])
+        upper_bound = np.array([self.scale_four_var.get(), self.scale_five_var.get(), self.scale_six_var.get()])
 
-        frameHSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        myMask = cv2.inRange(frameHSV, lowerBound, upperBound)
+        frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(frame_hsv, lower_bound, upper_bound)
 
-        # TODO: What is this and why I'm not using it
-        objectOfInterest = cv2.bitwise_and(frame, frame, mask=myMask)
-        contours, junk = cv2.findContours(myMask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, junk = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         if self.track_button_state:
             if len(contours) > 0:
@@ -109,42 +107,42 @@ class WebcampApp:
                 x, y, w, h = cv2.boundingRect(contour)
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
 
-                panCalc = (x + w / 2) - DISPLAY_W / 2
-                if panCalc > self.panError + 5 or panCalc < self.panError - 5:
-                    self.panError = panCalc
+                pan_calc = (x + w / 2) - DISPLAY_W / 2
+                if pan_calc > self.pan_error + 5 or pan_calc < self.pan_error - 5:
+                    self.pan_error = pan_calc
                     # This division is so that I don't increase/decrease the angle by 1 therefore long jumps are too slow, or too fast.
                     # Previous calc would be
-                    self.panAngle = self.panAngle - self.panError / 75
+                    self.pan_angle = self.pan_angle - self.pan_error / 75
 
-                    if self.panAngle < -90:
-                        self.panAngle = -90
-                    if self.panAngle > 90:
-                        self.panAngle = 90
+                    if self.pan_angle < -90:
+                        self.pan_angle = -90
+                    if self.pan_angle > 90:
+                        self.pan_angle = 90
 
                     # This indicates 35 that I don't want to move my camera unless the error is more than 35 pixels
-                    if abs(self.panError) > 35:
-                        pantilthat.pan(self.panAngle)
+                    if abs(self.pan_error) > 35:
+                        pantilthat.pan(self.pan_angle)
 
-                tiltCalc = (y + h / 2) - DISPLAY_H / 2
-                if tiltCalc > self.tiltError + 5 or tiltCalc < self.tiltError - 5:
-                    self.tiltError = tiltCalc
+                tilt_calc = (y + h / 2) - DISPLAY_H / 2
+                if tilt_calc > self.tilt_error + 5 or tilt_calc < self.tilt_error - 5:
+                    self.tilt_error = tilt_calc
                     # TODO: Check this addition (why is this addition and not substraction like the other one)
-                    self.tiltAngle = self.tiltAngle + self.tiltError / 75
+                    self.tilt_angle = self.tilt_angle + self.tilt_error / 75
 
-                    if self.tiltAngle < -90:
-                        self.tiltAngle = -90
+                    if self.tilt_angle < -90:
+                        self.tilt_angle = -90
                     # This indicates that I don't want my tilt to be lower than 40 (Positive number indicates that the camera its pointing downwards)
-                    if self.tiltAngle > 40:
-                        self.tiltAngle = 40
+                    if self.tilt_angle > 40:
+                        self.tilt_angle = 40
 
                     # This indicates 35 that I don't want to move my camera unless the error is more than 35 pixels
-                    if abs(self.tiltError) > 35:
-                        pantilthat.tilt(self.tiltAngle)
+                    if abs(self.tilt_error) > 35:
+                        pantilthat.tilt(self.tilt_angle)
 
         cv2.putText(frame, str(int(self.fps.fps_counter)) + " fps", self.fps.fps_text_position, self.fps.fps_text_font,
                     self.fps.fps_text_height, self.fps.fps_text_color, self.fps.fps_text_weight)
 
-        return frame, myMask
+        return frame, mask
 
     def check_buttons_pressed(self):
         if not self.color_image_checkbutton_var.get():
@@ -166,14 +164,14 @@ class WebcampApp:
         # Button pressed
         if self.rec_button_state is False:
             self.encoder.output = FfmpegOutput(video_name_and_format)
-            self.piCam.start_encoder(self.encoder)
+            self.pi_cam.start_encoder(self.encoder)
             self.rec_button_state = True
             self.rec_button.configure(relief='sunken', fg='white', bg='red')
             self.hide_widgets()
 
         # Button de-pressed
         else:
-            self.piCam.stop_encoder()
+            self.pi_cam.stop_encoder()
             self.rec_button_state = False
             self.rec_button.configure(relief='raised', fg='red', bg=self.default_color)
             self.show_widgets()
@@ -206,15 +204,15 @@ class WebcampApp:
         self.scale_six.configure(state='normal', fg='black')
 
     def configure_camera(self, display_w, display_h):
-        self.piCam = Picamera2()
-        self.piCam.preview_configuration.main.size = (display_w, display_h)
-        self.piCam.preview_configuration.main.format = "RGB888"
-        self.piCam.preview_configuration.transform = Transform(vflip=1, hflip=1)
-        self.piCam.preview_configuration.controls.FrameRate = 30
-        self.piCam.preview_configuration.align()
-        self.piCam.configure("preview")
+        self.pi_cam = Picamera2()
+        self.pi_cam.preview_configuration.main.size = (display_w, display_h)
+        self.pi_cam.preview_configuration.main.format = "RGB888"
+        self.pi_cam.preview_configuration.transform = Transform(vflip=1, hflip=1)
+        self.pi_cam.preview_configuration.controls.FrameRate = 30
+        self.pi_cam.preview_configuration.align()
+        self.pi_cam.configure("preview")
         self.encoder = H264Encoder(1000000)
-        self.piCam.start()
+        self.pi_cam.start()
 
 
 # Size of the Window = 800x410
@@ -223,5 +221,5 @@ if __name__ == '__main__':
     # Window sometimes doesn't spawn zoomed therefore we make sure it
     # does after 200ms
     root.after(200, lambda: root.attributes('-zoomed', True))
-    app = WebcampApp(root)
+    app = WebcamApp(root)
     root.mainloop()
