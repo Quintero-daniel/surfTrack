@@ -14,7 +14,7 @@ from picamera2.encoders import H264Encoder
 from picamera2.outputs import FfmpegOutput
 
 DISPLAY_W = 780
-DISPLAY_H = 200
+DISPLAY_H = 350
 
 faceCascade = cv2.CascadeClassifier('/home/dan/Desktop/venv/lib/python3.11/site-packages/cv2/data/haarcascade_frontalface_default.xml')
 
@@ -35,8 +35,7 @@ class WebcamApp:
         pantilthat.tilt(self.tilt_angle)
 
         self.color_image_label = Label(self.window)
-        self.color_image_label.configure(image=self.color_photo)
-        self.color_image_label.place(x=10, y=10)
+        
 
         self.rec_button_state = False
         self.rec_button = Button(text="REC", fg='red', bg=self.default_color, command=self.rec_command)
@@ -55,6 +54,8 @@ class WebcamApp:
 
         current_color_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         self.color_photo = ImageTk.PhotoImage(image=current_color_image)
+        self.color_image_label.configure(image=self.color_photo)
+        self.color_image_label.place(x=10, y=10)
 
         loop_time = time.time() - time_start
         self.fps.fps_counter = .9 * self.fps.fps_counter + .1 * (1 / loop_time)
