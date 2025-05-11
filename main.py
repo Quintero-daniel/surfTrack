@@ -99,25 +99,26 @@ class WebcamApp:
 
         contours, junk = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        if self.track_button_state:
-            if len(contours) > 0:
-                contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
 
-                contour = contours[0]
-                x, y, w, h = cv2.boundingRect(contour)
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
+        if len(contours) > 0:
+            contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
+            contour = contours[0]
+            x, y, w, h = cv2.boundingRect(contour)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
 
+            if self.track_button_state:
                 pan_calc = (x + w / 2) - DISPLAY_W / 2
+                # TODO: Check this if
                 if pan_calc > self.pan_error + 5 or pan_calc < self.pan_error - 5:
                     self.pan_error = pan_calc
                     # This division is so that I don't increase/decrease the angle by 1 therefore long jumps are too slow, or too fast.
                     # Previous calc would be
                     self.pan_angle = self.pan_angle - self.pan_error / 75
 
-                    if self.pan_angle < -90:
-                        self.pan_angle = -90
                     if self.pan_angle > 90:
                         self.pan_angle = 90
+                    if self.pan_angle < -90:
+                        self.pan_angle = -90
 
                     # This indicates 35 that I don't want to move my camera unless the error is more than 35 pixels
                     if abs(self.pan_error) > 35:
@@ -129,11 +130,11 @@ class WebcamApp:
                     # TODO: Check this addition (why is this addition and not substraction like the other one)
                     self.tilt_angle = self.tilt_angle + self.tilt_error / 75
 
-                    if self.tilt_angle < -90:
-                        self.tilt_angle = -90
                     # This indicates that I don't want my tilt to be lower than 40 (Positive number indicates that the camera its pointing downwards)
                     if self.tilt_angle > 40:
                         self.tilt_angle = 40
+                    if self.tilt_angle < -90:
+                        self.tilt_angle = -90
 
                     # This indicates 35 that I don't want to move my camera unless the error is more than 35 pixels
                     if abs(self.tilt_error) > 35:
