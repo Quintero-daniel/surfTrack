@@ -105,9 +105,6 @@ class WebcampApp:
             if len(contours) > 0:
                 contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
 
-                # TODO: What is this and why I'm not using it
-                # cv2.drawContours(frame, contours,  0, (255, 0, 0), 3)
-
                 contour = contours[0]
                 x, y, w, h = cv2.boundingRect(contour)
                 cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
@@ -115,16 +112,16 @@ class WebcampApp:
                 panCalc = (x + w / 2) - DISPLAY_W / 2
                 if panCalc > self.panError + 5 or panCalc < self.panError - 5:
                     self.panError = panCalc
-                    # TODO: Check this percentage 75
+                    # This division is so that I don't increase/decrease the angle by 1 therefore long jumps are too slow, or too fast.
+                    # Previous calc would be
                     self.panAngle = self.panAngle - self.panError / 75
 
-                    # TODO: Check this conditions < >
                     if self.panAngle < -90:
                         self.panAngle = -90
                     if self.panAngle > 90:
                         self.panAngle = 90
 
-                    # TODO: What is this 35?
+                    # This indicates 35 that I don't want to move my camera unless the error is more than 35 pixels
                     if abs(self.panError) > 35:
                         pantilthat.pan(self.panAngle)
 
@@ -136,9 +133,11 @@ class WebcampApp:
 
                     if self.tiltAngle < -90:
                         self.tiltAngle = -90
-                    # TODO: Check this 40 just to be safe
+                    # This indicates that I don't want my tilt to be lower than 40 (Positive number indicates that the camera its pointing downwards)
                     if self.tiltAngle > 40:
                         self.tiltAngle = 40
+
+                    # This indicates 35 that I don't want to move my camera unless the error is more than 35 pixels
                     if abs(self.tiltError) > 35:
                         pantilthat.tilt(self.tiltAngle)
 
