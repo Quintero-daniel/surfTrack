@@ -16,8 +16,8 @@ from picamera2.outputs import FfmpegOutput
 DISPLAY_W = 640
 DISPLAY_H = 360
 
-faceCascade = cv2.CascadeClassifier('/home/dan/Desktop/venv/lib/python3.11/site-packages/cv2/data/haarcascade_frontalface_default.xml')
-#faceCascade = cv2.CascadeClassifier('/home/dan/Desktop/venv/lib/python3.11/site-packages/cv2/data/haarcascade_fullbody.xml')
+# faceCascade = cv2.CascadeClassifier('/home/dan/Desktop/venv/lib/python3.11/site-packages/cv2/data/haarcascade_frontalface_default.xml')
+faceCascade = cv2.CascadeClassifier('/home/dan/Desktop/venv/lib/python3.11/site-packages/cv2/data/haarcascade_fullbody.xml')
 
 
 class WebcamApp:
@@ -31,7 +31,7 @@ class WebcamApp:
         self.pan_error = 0
         self.tilt_error = 0
         self.pan_angle = 0
-        self.tilt_angle = 0
+        self.tilt_angle = -25
         pantilthat.pan(self.pan_angle)
         pantilthat.tilt(self.tilt_angle)
 
@@ -52,7 +52,7 @@ class WebcamApp:
         time_start = time.time()
         
 #         -- Video ---
-        cap = cv2.VideoCapture("/home/dan/Desktop/scripts/2025_05_12_18_49_51.mp4")
+        cap = cv2.VideoCapture("/home/dan/Desktop/scripts/2025_05_13_11_35_47.mp4")
         
         while True:
             ret, frame = cap.read()
