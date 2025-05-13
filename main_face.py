@@ -13,10 +13,11 @@ from libcamera import Transform
 from picamera2.encoders import H264Encoder
 from picamera2.outputs import FfmpegOutput
 
-DISPLAY_W = 780
-DISPLAY_H = 350
+DISPLAY_W = 640
+DISPLAY_H = 360
 
 faceCascade = cv2.CascadeClassifier('/home/dan/Desktop/venv/lib/python3.11/site-packages/cv2/data/haarcascade_frontalface_default.xml')
+#faceCascade = cv2.CascadeClassifier('/home/dan/Desktop/venv/lib/python3.11/site-packages/cv2/data/haarcascade_fullbody.xml')
 
 
 class WebcamApp:
@@ -49,17 +50,38 @@ class WebcamApp:
 
     def refresh_images(self):
         time_start = time.time()
-        frame = self.pi_cam.capture_array()
-        frame = self.calculate_frames(frame)
-
-        current_color_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        self.color_photo = ImageTk.PhotoImage(image=current_color_image)
-        self.color_image_label.configure(image=self.color_photo)
-        self.color_image_label.place(x=10, y=10)
-
-        loop_time = time.time() - time_start
-        self.fps.fps_counter = .9 * self.fps.fps_counter + .1 * (1 / loop_time)
-        self.window.after(15, self.refresh_images)
+        
+#         -- Video ---
+        cap = cv2.VideoCapture("/home/dan/Desktop/scripts/2025_05_12_18_49_51.mp4")
+        
+        while True:
+            ret, frame = cap.read()
+            
+            if not ret:
+                break
+            
+            frame = self.calculate_frames(frame)
+            
+            cv2.imshow("Frame", frame)
+            
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+            
+        cap.release()
+        cv2.destroyAllWindows()
+            
+#             --- Camera ---
+#         frame = self.pi_cam.capture_array()
+#         frame = self.calculate_frames(frame)
+# 
+#         current_color_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+#         self.color_photo = ImageTk.PhotoImage(image=current_color_image)
+#         self.color_image_label.configure(image=self.color_photo)
+#         self.color_image_label.place(x=10, y=10)
+# 
+#         loop_time = time.time() - time_start
+#         self.fps.fps_counter = .9 * self.fps.fps_counter + .1 * (1 / loop_time)
+#         self.window.after(15, self.refresh_images)
 
     def calculate_frames(self, frame):
         frame_gray=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
